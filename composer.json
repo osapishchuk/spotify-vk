@@ -6,7 +6,9 @@
     "type": "project",
     "require": {
         "php": ">=5.5.9",
-        "laravel/framework": "5.2.*"
+        "laravel/framework": "5.2.*",
+        "jwilsson/spotify-web-api-php": "^1.0.0",
+        "vladkens/vk": "^0.1.9"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

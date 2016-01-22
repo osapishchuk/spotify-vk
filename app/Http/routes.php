@@ -27,5 +27,16 @@ Route::get('/', function () {
 */
 
 Route::group(['middleware' => ['web']], function () {
-    //
+    Route::get('/', 'ExampleController@connectSpotify');
+    Route::get('/saveSpotifyToken', 'ExampleController@saveSpotifyToken');
+    Route::get('/getUserInfo', 'ExampleController@getUserInfo');
+    Route::get('/showPlaylistList', 'ExampleController@showPlaylistList');
+});
+
+Route::group(['namespace' => 'Vk', 'prefix' => 'vk', 'middleware' => ['vk_session']], function()
+{
+    Route::get('/step_one', 'VkAuthController@stepOne');
+    Route::get('/step_two', 'VkAuthController@stepTwo');
+    Route::get('/step_three', 'VkAuthController@stepThree');
+    Route::get('/step_four', 'VkAuthController@stepFour');
 });
