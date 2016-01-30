@@ -35,7 +35,7 @@ class Kernel extends HttpKernel
             'throttle:60,1',
         ],
 
-        'vk_session' =>    [
+        'svdw_session' =>    [
             \Illuminate\Session\Middleware\StartSession::class,
         ],
     ];

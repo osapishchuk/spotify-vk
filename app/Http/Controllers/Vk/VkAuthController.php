@@ -15,7 +15,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\View;
 use VK\VK;
 use VK\VKException;
 
@@ -45,7 +47,8 @@ class VkAuthController extends Controller
      */
     public function __construct()
     {
-        $this->setTestData();
+//        $this->setTestData();
+        $this->spotifySessionValidate();
         $this->setAppId(Config::get('vk.app_id'));
         $this->setApiSecret(Config::get('vk.api_secret'));
         $this->setApiSetting(Config::get('vk.api_setting'));
@@ -228,7 +231,8 @@ class VkAuthController extends Controller
         $this->setCallbackUrl($this->getCallbackUrlArray()['step_two']);
         $this->setAuthorizeUrl($this->getCallbackUrl());
         $access_token = $this->getAccessToken();
-        return view('vk.step_one', ['authorize_url' => $this->getAuthorizeUrl(), 'access_token' => $access_token]);
+
+        return View::make('vk.step_one')->with('data', ['authorize_url' => $this->getAuthorizeUrl(), 'access_token' => $access_token]);
     }
 
     /**
@@ -250,7 +254,7 @@ class VkAuthController extends Controller
             }
         }
 
-        return view('vk.step_two', ['access_token' => $this->getAccessToken()]);
+        return View::make('vk.step_two')->with('data', ['access_token' => $this->getAccessToken()]);
     }
 
     /**
@@ -258,108 +262,158 @@ class VkAuthController extends Controller
      */
     public function stepThree()
     {
-        if ($this->getAccessToken() === null) {
-            try {
-                $this->setCallbackUrl($this->getCallbackUrlArray()['step_three']);
-                $this->setAccessToken($this->getCallbackUrl());
-            } catch (VKException $error) {
-                Log::error($error->getMessage());
-                return redirect('/vk/step_one');
-            }
-            if ($this->getAccessToken() === null) {
-                Log::warning('access_token is missing');
-                return redirect('/vk/step_one');
-            }
-        }
+        if(!$this->checkStepAuth('step_three')) return redirect('vk/step_one');
         $songsNameToSearchArray = $this->getSpotifySession()['songs'];
         if(!is_array($songsNameToSearchArray) || !count($songsNameToSearchArray) ) return redirect('vk/step_one');
-        $songsToImport = array();
-        foreach ($songsNameToSearchArray as $songName)
-        {
-            $res = $this->vk->api('audio.search', [
-                'v' => '2.0',
-                'q' => $songName
-            ]);
-
-            if((int)$res['response'][0] !== 0) {
-                $songsToImport[] = array(
-                    'aid'   =>  $res['response'][1]['aid'],
-                    'oid'   =>  $res['response'][1]['owner_id'],
-                );
-            }
-
-            sleep(1);
-        }
-        Session::put('vk.songsToImport', $songsToImport);
-        $songsToImportAmount = count($songsNameToSearchArray) - count($songsToImport);
+        $songsToImport = Session::get('vk.songsToImport')?:'no songs';
 
         $data = array(
             'songsNameToSearchArray'   =>  $songsNameToSearchArray,
             'songsToImport' => $songsToImport,
-            'songsToImportAmount'   =>  $songsToImportAmount,
             'access_token'  =>  $this->getAccessToken()
         );
 
-        return view('vk.step_three', $data);
+        return View::make('vk.step_three')->with('data', $data);
     }
 
+    /**
+     * @param $songSpotifyArrayId
+     * @param null $captchaSid
+     * @param null $captchaKey
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function searchSong($songSpotifyArrayId, $captchaSid = null, $captchaKey = null)
+    {
+        if (Request::ajax()) {
+            if (!$this->checkStepAuth('step_three')) return Response::json(array(
+                    'response' => array(
+                        'status' => 'error',
+                        'message' => 'Token Auth failed'
+                    )
+                )
+            );
+            $songsNameToSearchArray = $this->getSpotifySession()['songs'];
+            if(!is_array($songsNameToSearchArray) || !count($songsNameToSearchArray) ) return Response::json(array(
+                    'response' => array(
+                        'status' => 'error',
+                        'message' => 'Spotify Session missing'
+                    )
+                )
+            );
+            $songName = $songsNameToSearchArray[$songSpotifyArrayId];
+            if (strlen($songName) === 0) return Response::json(array(
+                    'response' => array(
+                        'status' => 'error',
+                        'message' => 'Song name missing'
+                    )
+                )
+            );
+
+            $config = array(
+                'v' => '2.0',
+                'q' => $songName,
+            );
+
+            if ($captchaKey && $captchaSid) {
+                $config['captcha_sid'] = $captchaSid;
+                $config['captcha_key'] = $captchaKey;
+            }
+
+            $res = $this->vk->api('audio.search', $config);
+
+            if (array_key_exists('error', $res)) {
+                if((int)$res['error']['error_code'] === 14) {
+                    return Response::json(array(
+                            'response' => array(
+                                'status' => 'error',
+                                'message' => $res['error']['error_msg'],
+                                'captcha_sid' => $res['error']['captcha_sid'],
+                                'captcha_img' => $res['error']['captcha_img'],
+                                'method'    =>  'audio-search',
+                                'q' =>  $songName
+                            )
+                        )
+                    );
+                } else {
+                    return Response::json(array(
+                            'response' => array(
+                                'status' => 'error',
+                                'message' => $res['error']['error_msg']
+                            )
+                        )
+                    );
+                }
+            }
+
+            if((int)$res['response'][0] !== 0) {
+                $songToImport = array(
+                    'aid' => $res['response'][1]['aid'],
+                    'oid' => $res['response'][1]['owner_id'],
+                    'artist'    =>  $res['response'][1]['artist'],
+                    'title' =>   $res['response'][1]['title'],
+                    'status' => 0
+                );
+                Session::put('vk.songsToImport.'.$res['response'][1]['aid'], $songToImport);
+
+                return Response::json(array(
+                        'response' => array(
+                            'status' => 'success',
+                            'message' => 'Song was found',
+                            'song_info' => $songToImport,
+                        )
+                    )
+                );
+            } else {
+                return Response::json(array(
+                        'response' => array(
+                            'status' => 'failed',
+                            'message' => 'Song was not found'
+                        )
+                    )
+                );
+            }
+        }
+
+        return redirect('vk/step_one');
+    }
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
      */
     public function stepFour()
     {
-        if ($this->getAccessToken() === null) {
-            try {
-                $this->setCallbackUrl($this->getCallbackUrlArray()['step_four']);
-                $this->setAccessToken($this->getCallbackUrl());
-            } catch (VKException $error) {
-                Log::error($error->getMessage());
-                return redirect('/vk/step_one');
-            }
-            if ($this->getAccessToken() === null) {
-                Log::warning('access_token is missing');
-                return redirect('/vk/step_one');
-            }
-        }
+       if(!$this->checkStepAuth('step_four')) return redirect('vk/step_one');
         $songsToImport = Session::get('vk.songsToImport');
         if(!is_array($songsToImport) || !count($songsToImport) ) return redirect('vk/step_one');
-        $songsImported = 0;
-        $resErrors = array();
-        foreach ($songsToImport as $songToImport)
-        {
-            $res = $this->vk->api('audio.add', [
-                'v' => '2.0',
-                'aid' => $songToImport['aid'],
-                'oid'   => $songToImport['oid'],
-            ]);
-
-            if(array_key_exists('response',$res)) {
-                $resErrors[] = array(
-                    'aid' => $songToImport['aid'],
-                    'oid'   => $songToImport['oid'],
-                    'response'    =>  $res['response']
-                );
-                $songsImported++;
-            } else {
-                $resErrors[] = array(
-                    'aid' => $songToImport['aid'],
-                    'oid'   => $songToImport['oid'],
-                    'error'    =>  $res['error']
-                );
-            }
-
-//            sleep(1);
-        }
-        Session::put('vk.songsImported ', $songsImported);
 
         $data = array(
-            'songsImported' => $songsImported,
-            'resErrors'   =>  $resErrors,
+            'songsToImport' => $songsToImport,
             'access_token'  =>  $this->getAccessToken()
         );
 
         return view('vk.step_four', $data);
     }
+
+    /**
+     * @param $callbackKeyName
+     * @return bool
+     */
+    private function checkStepAuth($callbackKeyName)
+    {
+        if ($this->getAccessToken() === null) {
+            try {
+                $this->setCallbackUrl($this->getCallbackUrlArray()[$callbackKeyName]);
+                $this->setAccessToken($this->getCallbackUrl());
+            } catch (VKException $error) {
+                return false;
+            }
+            if ($this->getAccessToken() === null) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /**
      * Unset vk session data
      */
@@ -368,6 +422,111 @@ class VkAuthController extends Controller
         if (Session::has('vk')) {
             Session::forget('vk');
         }
+    }
+
+    /**
+     * @param $aid
+     * @param $oid
+     * @param null $captchaSid
+     * @param null $captchaKey
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function importSong($aid, $oid, $captchaSid = null, $captchaKey = null)
+    {
+        if (Request::ajax())
+        {
+            if (!$this->checkStepAuth('step_four')) return Response::json(array(
+                    'response' => array(
+                        'status' => 'error',
+                        'message' => 'Token Auth failed'
+                    )
+                )
+            );
+
+            if ((int)$aid === 0 || (int)$oid === 0) return Response::json(array(
+                    'response' => array(
+                        'status' => 'error',
+                        'message' => 'Audio or Author id is wrong'
+                    )
+                )
+            );
+
+            $songsToImport = Session::get('vk.songsToImport');
+            if(!is_array($songsToImport) || !count($songsToImport) )return Response::json(array(
+                    'response' => array(
+                        'status' => 'error',
+                        'message' => 'Song session was not set. Please follow all steps again'
+                    )
+                )
+            );
+
+            if ((int)Session::get('vk.songsToImport.' . $aid . 'status') === 1) return Response::json(array(
+                    'response' => array(
+                        'status' => 'success',
+                        'message' => 'Song already imported'
+                    )
+                )
+            );
+
+            $config = array(
+                'v' => '2.0',
+                'aid' => $aid,
+                'oid' => $oid,
+            );
+
+            if ($captchaKey && $captchaSid) {
+                $config['captcha_sid'] = $captchaSid;
+                $config['captcha_key'] = $captchaKey;
+            }
+            $res = $this->vk->api('audio.add', $config);
+
+            if(array_key_exists('response',$res)) {
+
+                Session::put('vk.songsToImport.'.$aid.'.status', 1);
+
+                return Response::json(array(
+                        'response' => array(
+                            'status' => 'success',
+                            'message' => 'Song imported'
+                        )
+                    )
+                );
+            }
+            if (array_key_exists('error', $res)) {
+                if($res['error']['error_code'] == 14) {
+                    return Response::json(array(
+                            'response' => array(
+                                'status' => 'error',
+                                'message' => $res['error']['error_msg'],
+                                'captcha_sid' => $res['error']['captcha_sid'],
+                                'captcha_img' => $res['error']['captcha_img'],
+                                'method'    =>  'audio-add',
+                                'aid' => $aid,
+                                'oid'   => $oid,
+                            )
+                        )
+                    );
+                } else {
+                    return Response::json(array(
+                            'response' => array(
+                                'status' => 'error',
+                                'message' => $res['error']['error_msg']
+                            )
+                        )
+                    );
+                }
+            }
+
+            return Response::json(array(
+                    'response' => array(
+                        'status' => 'error',
+                        'message' => 'vk response code unsupported'
+                    )
+                )
+            );
+        }
+
+        return redirect('/');
     }
 
     private function setTestData()
@@ -405,5 +564,10 @@ class VkAuthController extends Controller
             29 => 'Where? (From the Opera "The Rabbits") Kate Miller-Heidke'
         );
         Session::put('spotify.songs',$array);
+    }
+
+    private function spotifySessionValidate()
+    {
+        if (!Session::has('spotify')) return redirect('/spotify/step_one');
     }
 }

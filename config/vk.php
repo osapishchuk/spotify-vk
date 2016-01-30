@@ -17,6 +17,8 @@ return array(
         'step_two'  =>  'http://game-ray.com/vk/step_two',
         'step_three'    =>  'http://game-ray.com/vk/step_three',
         'step_four'    =>  'http://game-ray.com/vk/step_four',
+        'ajax_import_song'  =>  'http://game-ray.com/vk/ajax/import_song',
+        'ajax_search_song'  =>  'http://game-ray.com/vk/ajax/search_song',
     ),
     'api_setting'  =>  'audio'
 );
