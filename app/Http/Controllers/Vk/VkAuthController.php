@@ -529,43 +529,6 @@ class VkAuthController extends Controller
         return redirect('/');
     }
 
-    private function setTestData()
-    {
-        $array = array(
-            0 => 'Smack! Francis Davila',
-            1 => '21 Hunter Hayes',
-            2 => 'Can You Find Me - Radio Edit Andrew Bennett',
-            3 => 'Where I Wanna Be A R I Z O N A',
-            4 => 'Fire with Fire (Rykkinnfella Remix) ST. NIKLAS',
-            5 => 'Perfect - Matoma Remix One Direction',
-            6 => 'Screaming Colors Violet Days',
-            7 => 'Beautiful Now / Verge (Mashup) Tanner Patrick',
-            8 => 'SummerThing! Afrojack',
-            9 => 'Flashlight Petronix',
-            10 => 'What a Day B4CH',
-            11 => 'Until We Die Gentle Bones',
-            12 => 'We Are Kids North',
-            13 => 'Toothbrush DNCE',
-            14 => 'By My Side Leroy Sanchez',
-            15 => 'Lock Up The Rainbow Chris Lago',
-            16 => 'Afraid of the Dark MKTO',
-            17 => 'Renegades X Ambassadors',
-            18 => 'Habits (Stay High) Billy Chuchat',
-            19 => 'Here for You Kygo',
-            20 => 'Send My Love (To Your New Lover) - Acoustic Sofia Karlberg',
-            21 => 'Rainbow The Likes of Us',
-            22 => 'Vaporize (Seven Am Remix) M. Maggie',
-            23 => 'She\'s Crazy but She\'s Mine Alex Sparrow',
-            24 => 'I Was Made For Loving You Will Gittens',
-            25 => 'ILYSB LANY',
-            26 => 'Rivers (feat. Nico & Vinz) Thomas Jack',
-            27 => 'How Hard I Try filous',
-            28 => 'Hotel Ceiling Rixton',
-            29 => 'Where? (From the Opera "The Rabbits") Kate Miller-Heidke'
-        );
-        Session::put('spotify.songs',$array);
-    }
-
     private function spotifySessionValidate()
     {
         if (!Session::has('spotify')) return redirect('/spotify/step_one');

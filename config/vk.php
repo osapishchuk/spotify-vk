@@ -11,7 +11,7 @@
 
 return array(
     'app_id' => '5224267',
-    'api_secret' => 'nd3S2Fim1RjMRsCxd7Yz',
+    'api_secret' => 'e38bd2d6b3b0496d9efe2ed9f8ed779e',
     'callback_url' => array(
         'step_one'  =>  'http://game-ray.com/vk/step_one',
         'step_two'  =>  'http://game-ray.com/vk/step_two',

@@ -1,7 +1,7 @@
 <?php
 return array(
     'client_id' => 'a72c81572916452fb074878d2affc29c',
-    'client_secret' => '16205349a07949eb9be34bfc782d819a',
+    'client_secret' => 'e38bd2d6b3b0496d9efe2ed9f8ed779e',
     'redirect_url' => array(
         'step_two'  =>  'http://game-ray.com/spotify/step_two',
         'getUserInfo'   =>  'http://game-ray.com/spotify/step_three',

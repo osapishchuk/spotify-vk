@@ -104,6 +104,7 @@ class SpotifyAuthController extends Controller
             }
         }
 
+        return View::make('spotify.step_three')->with('data', $data);
         return redirect('/spotify/step_four');
     }
 
@@ -145,7 +146,7 @@ class SpotifyAuthController extends Controller
         }
         $request->session()->put('spotify.songs', $spotifyPlaylist);
 
-        return View::make('spotify.step_three')->with('data', $data);
+        return View::make('spotify.step_four')->with('data', $data);
     }
 
     /**

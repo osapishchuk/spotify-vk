@@ -6,7 +6,8 @@ var errorCode = {
 };
 
 var modalType = {
-    1: 'Error'
+    1: 'Error',
+    2: 'Captcha',
 };
 
 songImport = function(spotifySongId, aid, oid, captchaData) {
@@ -17,9 +18,11 @@ songImport = function(spotifySongId, aid, oid, captchaData) {
             $('tr#'+spotifySongId+' td.song_action .song-import-active').hide();
             if(data.response.status == "error") {
                 $('tr#'+spotifySongId+' td.song_action .song-not-imported').show();
-                modal(1,data.response.message);
+
                 if(data.response.hasOwnProperty('captcha_sid') || data.response.hasOwnProperty('captcha_sid')){
-                    return 0;
+                    modal(2,null,data.response);
+                } else {
+                    modal(1,data.response.message);
                 }
             } else if (data.response.status == "success") {
                 $('tr#'+spotifySongId+' td.song_action .song-imported').show();
@@ -55,10 +58,12 @@ searchSong = function (songSpotifyArrayId) {
                 addSongImportData(data.response.song_info);
             } else if (data.response.status == "error"){
                 $('tr#'+songSpotifyArrayId+' td.song_status .song-error').show();
-                modal(1,data.response.message);
                 if(data.response.hasOwnProperty('captcha_sid') || data.response.hasOwnProperty('captcha_sid')){
+                    modal(2,null,data.response);
                     return 0;
                 }
+                modal(1,data.response.message);
+                return 0;
             } else {
                 $('tr#'+songSpotifyArrayId+' td.song_status .song-error').show();
                 console.log(data);
@@ -71,13 +76,9 @@ searchSong = function (songSpotifyArrayId) {
 
 searchSongs = function () {
     var status;
-    $('#vk-table > tbody  > tr').each(function() {
-        var _this = this;
-        setTimeout(function(){
-            status = searchSong(($(_this).attr('id')));
-        }, 0);
-
-        if(status==0) {
+    $('#vk-table > tbody  > tr').each(function () {
+        status = searchSong(($(this).attr('id')));
+        if (status == 0) {
             $('#songs-search-restart').show();
             return false;
         }
@@ -85,8 +86,18 @@ searchSongs = function () {
 };
 
 modal = function (type, message, data) {
-    $("#vk" + modalType[type] + " .modal-body").empty().append(message);
-    $("#vk" + modalType[type]).modal('show');
+    if (type != 2) {
+        $("#vk" + modalType[type] + " .modal-body").empty().append(message);
+        $("#vk" + modalType[type]).modal('show');
+    } else if (type == 2) {
+        var modalBody = '<img src="'+data.captcha_img+'" alt="VK Captcha" height="42" width="42">'+
+            '<input type="hidden" name="vk-captcha-id" value="'+data.captcha_sid+'">'+
+            '<input type="text" name="vk-captcha-value">'+
+            '<button id="vk-captcha">Ok</button> ';
+
+        $("#vkCaptcha .modal-body").empty().append(modalBody);
+        $("#vkCaptcha").modal('show');
+    }
 };
 
 $( document ).ready(function() {
@@ -101,6 +112,15 @@ $( document ).ready(function() {
     searchSongs();
 
     $('#songs-search-restart').on( "click", function() {
+        $('#vk-table > tbody  > tr').each(function () {
+            var id = $(this).attr('id');
+            $('tr#'+id+' td.song_status a.song-not-found').hide();
+            $('tr#'+id+' td.song_status a.song-found').hide();
+            $('tr#'+id+' td.song_status a.song-searching').show();
+            $('tr#'+id+' td.song_action'+" input[name='oid']").val('');
+            $('tr#'+id+' td.song_action'+" input[name='aid']").val('');
+        });
+
         searchSongs();
     });
 });

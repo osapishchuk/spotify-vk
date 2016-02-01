@@ -50,7 +50,19 @@
             <h3 id="vkErrorLabel">Error</h3>
         </div>
         <div class="modal-body">
-            <p>One fine body…</p>
+            <p>One fine bodyï¿½</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn red" data-dismiss="modal" aria-hidden="true" type="button">Close</button>
+        </div>
+    </div>
+    <div id="vkCaptcha" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="vkCaptchaLabel" aria-hidden="true">
+        <div class="modal-header">
+            <button aria-hidden="true" data-dismiss="modal" class="close" type="button"></button>
+            <h3 id="vkErrorLabel">Captcha</h3>
+        </div>
+        <div class="modal-body">
+            <p>One fine bodyï¿½</p>
         </div>
         <div class="modal-footer">
             <button class="btn red" data-dismiss="modal" aria-hidden="true" type="button">Close</button>

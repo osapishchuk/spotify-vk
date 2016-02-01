@@ -21,15 +21,15 @@
                         <div class="container">
                             <div class="span12">
                                 <h3 class="page-title">
-                                    STEP 1.3.1
-                                    <small>Spotify.SVDW.Review-Playlist/New-Section(chose playlist)</small>
+                                    STEP 1.3.2
+                                    <small>Spotify.SVDW.Review-Playlist/New-Section</small>
                                 </h3>
                                 <ul class="breadcrumb">
                                     <li>Playlist songs data received from Spotify and
                                         we could move to new section, where all VK magic should be done.
                                     </li>
                                 </ul>
-                                @include('spotify.block.second-form')
+                                @include('spotify.block.third-form')
                             </div>
                         </div>
                     </div>
