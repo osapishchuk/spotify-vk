@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
+use Kint;
 use SpotifyWebAPI;
 
 class SpotifyAuthController extends Controller
@@ -83,8 +84,13 @@ class SpotifyAuthController extends Controller
         $api = new SpotifyWebAPI\SpotifyWebAPI();
 
         if (isset($_GET['code'])) {
+            try {
             $session->requestAccessToken($_GET['code']);
             $api->setAccessToken($session->getAccessToken());
+            } catch ( Exception $e) {
+                Log::error($e->getMessage());
+                return redirect('/spotify/step_one');
+            }
         } else {
             header('Location: ' . $session->getAuthorizeUrl(array(
                     'scope' => array(
@@ -98,14 +104,25 @@ class SpotifyAuthController extends Controller
         $me = $api->me();
         $playlists = $api->getUserPlaylists($me->id);
         foreach ($playlists->items as $playlist) {
-            if($playlist->name === Config::get('spotify.import_playlist_name')) {
-                $request->session()->put('spotify.user_id',$playlist->owner->id);
-                $request->session()->put('spotify.playlist_id', $playlist->id);
-            }
+            $data[] = array(
+                'id'    =>  $playlist->id,
+                'owner_id'    =>  $playlist->owner->id,
+                'name'  =>  $playlist->name,
+            );
         }
 
         return View::make('spotify.step_three')->with('data', $data);
-        return redirect('/spotify/step_four');
+    }
+
+    public function setPlaylist($owner_id, $playlist_id, Request $request)
+    {
+        if (!$owner_id || !$playlist_id) {
+            return redirect('/spotify/step_two');
+        }
+        $request->session()->put('spotify.user_id', $owner_id);
+        $request->session()->put('spotify.playlist_id', $playlist_id);
+
+        return redirect('spotify/step_four');
     }
 
     public function showPlaylistList(Request $request)

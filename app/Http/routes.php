@@ -34,6 +34,7 @@ Route::group(['namespace' => 'Spotify', 'prefix' => 'spotify', 'middleware' => [
     Route::get('/step_one', 'SpotifyAuthController@stepOne');
     Route::get('/step_two', 'SpotifyAuthController@stepTwo');
     Route::get('/step_three', 'SpotifyAuthController@getUserInfo');
+    Route::get('/set_playlist/{owner_id}/{playlist_id}', 'SpotifyAuthController@setPlaylist');
     Route::get('/step_four', 'SpotifyAuthController@showPlaylistList');
     Route::get('/logout', 'SpotifyAuthController@logout');
 });

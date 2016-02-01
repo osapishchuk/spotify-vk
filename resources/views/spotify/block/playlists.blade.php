@@ -5,6 +5,7 @@
             <thead>
             <tr>
                 <th>id</th>
+                <th>owner_id</th>
                 <th>name</th>
                 <th>action</th>
             </tr>
@@ -13,8 +14,9 @@
             @foreach($data as $playlist)
                 <tr>
                     <td>{{$playlist['id']}}</td>
+                    <td>{{$playlist['owner_id']}}</td>
                     <td>{{$playlist['name']}}</td>
-                    <td><a class="btn disabled playlist-import" href="javascript:void(0);">Import</a></td>
+                    <td><a class="btn playlist-import" href="{{URL::to('/spotify/set_playlist/'.$playlist['owner_id'].'/'.$playlist['id'])}}">Import</a></td>
                 </tr>
             @endforeach
             </tbody>

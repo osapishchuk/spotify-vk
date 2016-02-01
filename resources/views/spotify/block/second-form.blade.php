@@ -34,7 +34,7 @@
                 <div class="progress progress-success progress-striped" id="bar">
                     <div class="bar" style="width: 99%;"></div>
                 </div>
-                @include('spotify.block.songs')
+                @include('spotify.block.playlists')
                 <div class="form-actions clearfix">
                     <a class="btn green button-next pull-right" href="{{URL::to('/vk/step_one')}}">
                         Continue <i class="m-icon-swapright m-icon-white"></i>
