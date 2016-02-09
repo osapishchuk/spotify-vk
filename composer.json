@@ -9,7 +9,7 @@
         "laravel/framework": "5.2.*",
         "jwilsson/spotify-web-api-php": "^1.0.0",
         "vladkens/vk": "^0.1.9",
-        "raveren/kint": "^1.0"
+        "raveren/kint": "dev-master"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

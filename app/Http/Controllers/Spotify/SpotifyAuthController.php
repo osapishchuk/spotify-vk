@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
-use Kint;
 use SpotifyWebAPI;
 
 class SpotifyAuthController extends Controller
