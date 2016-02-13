@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
 use SpotifyWebAPI;
 
+/**
+ * Class MainController
+ * @package App\Http\Controllers
+ */
 class MainController extends Controller
 {
     /**
@@ -18,11 +22,17 @@ class MainController extends Controller
         //
     }
 
+    /**
+     * @return mixed
+     */
     public function home()
     {
         return View::make('home');
     }
 
+    /**
+     * @return View
+     */
     public function finish()
     {
         Session::flush();

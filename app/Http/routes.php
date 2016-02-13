@@ -23,12 +23,6 @@ Route::get('/', 'MainController@home');
 |
 */
 
-//Route::group(['middleware' => ['web']], function () {
-//    Route::get('/spotify', 'ExampleController@connectSpotify');
-//    Route::get('/saveSpotifyToken', 'ExampleController@saveSpotifyToken');
-//    Route::get('/getUserInfo', 'ExampleController@getUserInfo');
-//    Route::get('/showPlaylistList', 'ExampleController@showPlaylistList');
-//});
 Route::group(['namespace' => 'Spotify', 'prefix' => 'spotify', 'middleware' => ['svdw_session']], function()
 {
     Route::get('/step_one', 'SpotifyAuthController@stepOne');

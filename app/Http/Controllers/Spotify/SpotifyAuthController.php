@@ -21,10 +21,26 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
 use SpotifyWebAPI;
 
+/**
+ * Class SpotifyAuthController
+ * @package app\Http\Controllers\Spotify
+ */
 class SpotifyAuthController extends Controller
 {
+    /**
+     * @var
+     */
+    /**
+     * @var
+     */
+    /**
+     * @var
+     */
     private $clientId, $clientSecret, $redirectUrl;
 
+    /**
+     * SpotifyAuthController constructor.
+     */
     public function __construct()
     {
         $this->setClientId(Config::get('spotify.client_id'));
@@ -32,6 +48,9 @@ class SpotifyAuthController extends Controller
     }
 
 
+    /**
+     *
+     */
     public function stepOne()
     {
         $this->setRedirectUrl('step_two');
@@ -54,6 +73,10 @@ class SpotifyAuthController extends Controller
         die();
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
     public function stepTwo(Request $request)
     {
         if(!Input::get('code')) redirect('/step_one');
@@ -77,6 +100,10 @@ class SpotifyAuthController extends Controller
         return View::make('spotify.step_two')->with('data', $data);
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
     public function getUserInfo(Request $request)
     {
         $session = new SpotifyWebAPI\Session(Config::get('spotify.client_id'), Config::get('spotify.client_secret'), Config::get('spotify.redirect_url.getUserInfo'));
@@ -113,6 +140,12 @@ class SpotifyAuthController extends Controller
         return View::make('spotify.step_three')->with('data', $data);
     }
 
+    /**
+     * @param $owner_id
+     * @param $playlist_id
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
     public function setPlaylist($owner_id, $playlist_id, Request $request)
     {
         if (!$owner_id || !$playlist_id) {
@@ -124,6 +157,10 @@ class SpotifyAuthController extends Controller
         return redirect('spotify/step_four');
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
     public function showPlaylistList(Request $request)
     {
         $session = new SpotifyWebAPI\Session(Config::get('spotify.client_id'), Config::get('spotify.client_secret'), Config::get('spotify.redirect_url.showPlaylistList'));
@@ -220,6 +257,9 @@ class SpotifyAuthController extends Controller
         $this->redirectUrl = $redirectUrl;
     }
 
+    /**
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
     public function logout()
     {
         $this->clearSession();
@@ -229,6 +269,9 @@ class SpotifyAuthController extends Controller
         return redirect('/');
     }
 
+    /**
+     *
+     */
     private function clearSession()
     {
         if (Session::has('spotify')) {

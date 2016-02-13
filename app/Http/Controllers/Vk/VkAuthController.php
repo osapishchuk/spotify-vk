@@ -47,7 +47,6 @@ class VkAuthController extends Controller
      */
     public function __construct()
     {
-//        $this->setTestData();
         $this->spotifySessionValidate();
         $this->setAppId(Config::get('vk.app_id'));
         $this->setApiSecret(Config::get('vk.api_secret'));
@@ -529,6 +528,9 @@ class VkAuthController extends Controller
         return redirect('/');
     }
 
+    /**
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
     private function spotifySessionValidate()
     {
         if (!Session::has('spotify')) return redirect('/spotify/step_one');
